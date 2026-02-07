@@ -1,11 +1,10 @@
 # TG Captcha Bot
 
-A Telegram bot that protects chat groups by requiring new members to solve a simple math captcha and verify subscription to a channel before approving join requests.
+A Telegram bot that protects chat groups by requiring new members to solve a simple math captcha, verify subscription to a channel, or both before approving join requests.
 
 ## Features
 
-- Handles chat join requests with math-based captcha
-- Verifies channel subscription before approval
+- Configurable join requirements: math captcha, channel subscription, or both
 - Uses inline keyboards for user interaction
 - Configurable via environment variables
 - Docker support for easy deployment
@@ -27,12 +26,23 @@ Create a `.env` file in the root directory with the following variables:
 BOT_TOKEN=
 CHANNEL_ID=
 CHAT_ID=
-INSTRUCTION_TEXT=To join, please subscribe to <channel_name> and solve the equation below:
+MODE=subscription
+INSTRUCTION_TEXT=To join, please subscribe to <channel_name> and click the button below.
 SUCCESS_TEXT=Approved. Welcome!
-BUTTON_TEXT=I subscribed. Answer:
+BUTTON_TEXT=I subscribed!:
 ANSWER_INCORRECT=Incorrect answer. Join request declined.
 NOT_SUBSCRIBED=Not subscribed to the channel. Join request declined.
 ```
+
+`MODE` can be `subscription` (check channel subscription only), `equation` (math captcha only), or `both` (both checks).
+
+Example values for `INSTRUCTION_TEXT` and `BUTTON_TEXT` based on `MODE`:
+
+| Mode         | INSTRUCTION_TEXT                                                            | BUTTON_TEXT             |
+| ------------ | --------------------------------------------------------------------------- | ----------------------- |
+| subscription | `To join, please subscribe to <channel_name> and click the button below:`   | `I subscribed!`         |
+| equation     | `To join, please solve the equation below:`                                 | `Answer:`               |
+| both         | `To join, please subscribe to <channel_name> and solve the equation below:` | `I subscribed. Answer:` |
 
 ## Running locally
 
@@ -53,7 +63,7 @@ docker build -t tg-captcha-bot .
 ## Join request processing flow
 
 1. A user sends a join request to the chat.
-2. The bot generates a simple math captcha with multiple choice options and sends a private message to the user with the question and answer buttons.
-3. The user clicks one of the answer buttons.
-4. If the answer is incorrect or the user is not subscribed, the bot declines the join request and shows an error message.
-5. If the answer is correct and the user is subscribed, the bot approves the join request and sends a welcome message.
+2. Depending on `MODE`, the bot sends a private message with captcha (math or subscription verification) and buttons.
+3. The user interacts with the buttons.
+4. The bot validates the response based on `MODE` (answer and/or subscription).
+5. If requirements are met, the join request is approved; otherwise, declined.
